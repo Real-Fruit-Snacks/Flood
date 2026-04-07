@@ -1,16 +1,20 @@
 <div align="center">
-  <h1>Flood</h1>
 
-  ![Rust](https://img.shields.io/badge/Rust-000000?style=flat&logo=rust&logoColor=white)
-  ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows%20%7C%20macOS-blue)
-  ![License](https://img.shields.io/badge/License-MIT-green)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/main/docs/assets/logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/main/docs/assets/logo-light.svg">
+  <img alt="Flood" src="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/main/docs/assets/logo-dark.svg" width="520">
+</picture>
 
-  **Fast web fuzzer with recursive discovery**
+![Rust](https://img.shields.io/badge/language-Rust-orange.svg)
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-  Async Rust web fuzzer for directory enumeration, virtual host discovery, and parameter fuzzing.
-  100 concurrent requests by default, recursive scanning, auto-throttle on 429s, Catppuccin Mocha terminal UI.
+**Fast web fuzzer with recursive discovery.**
 
-  > **Authorization Required**: Only use Flood against systems you have explicit written permission to test.
+Async Rust web fuzzer for directory enumeration, virtual host discovery, and parameter fuzzing. 100 concurrent requests, recursive scanning, auto-throttle on 429s, FUZZ keyword placement, Catppuccin Mocha terminal UI.
+
+> **Authorization Required**: Designed exclusively for authorized security testing with explicit written permission.
 
 </div>
 
@@ -18,12 +22,7 @@
 
 ## Quick Start
 
-### Prerequisites
-
-- Rust toolchain (stable): https://rustup.rs
-- A wordlist (e.g., [SecLists](https://github.com/danielmiessler/SecLists))
-
-### Build
+**Prerequisites:** Rust toolchain (stable), a wordlist
 
 ```bash
 git clone https://github.com/Real-Fruit-Snacks/Flood.git
@@ -31,17 +30,11 @@ cd Flood
 make release
 ```
 
-### Run
+**Verify:**
 
 ```bash
-# Basic directory enumeration
-./target/release/flood -u https://example.com/FUZZ -w /path/to/wordlist.txt
-
-# With extensions and recursion
-./target/release/flood -u https://example.com/FUZZ -w wordlist.txt -r -e php,bak,conf
-
-# VHost discovery
-./target/release/flood -u https://example.com -H "Host: FUZZ.example.com" -w subdomains.txt -fc 404
+./target/release/flood --help
+./target/release/flood -u https://example.com/FUZZ -w wordlist.txt
 ```
 
 ---
@@ -49,120 +42,111 @@ make release
 ## Features
 
 ### Directory Enumeration
-```bash
-flood -u https://example.com/FUZZ -w common.txt
-```
 
-### Recursive Scanning
+FUZZ keyword placement in any URL position. Extensions, status code filtering, response size filtering.
+
 ```bash
-# Automatically discover and fuzz into subdirectories
-flood -u https://example.com/FUZZ -w common.txt -r -e php,bak --depth 3
+flood -u https://target.com/FUZZ -w common.txt
+flood -u https://target.com/FUZZ -w common.txt -r -e php,bak --depth 3
 ```
 
 ### Virtual Host Discovery
+
+FUZZ in headers for subdomain enumeration. Filter by response size to remove defaults.
+
 ```bash
-flood -u https://example.com -H "Host: FUZZ.example.com" -w subdomains.txt -fs 0
+flood -u https://target.com -H "Host: FUZZ.target.com" -w subdomains.txt -fs 0
 ```
 
 ### Parameter Fuzzing
+
+FUZZ in POST data, query strings, or headers. Filter by status code to find valid credentials.
+
 ```bash
-flood -u https://example.com/login -d "user=admin&pass=FUZZ" -w passwords.txt --filter-code 401
+flood -u https://target.com/login -d "user=admin&pass=FUZZ" -w passwords.txt --filter-code 401
 ```
 
-### Multiple Wordlists (Clusterbomb)
+### Clusterbomb Mode
+
+Multiple wordlists with FUZZ/FUZ2Z keyword placement for combinatorial fuzzing.
+
 ```bash
-flood -u https://example.com/FUZZ/FUZ2Z -w dirs.txt -w files.txt
+flood -u https://target.com/FUZZ/FUZ2Z -w dirs.txt -w files.txt
 ```
 
 ### Advanced Filtering
+
+Match or filter by status code, response size, word count, line count, or regex in response body.
+
 ```bash
-# Match only specific status codes
 flood -u https://target.com/FUZZ -w list.txt --match-code 200,301
-
-# Filter by response size (remove empty responses)
-flood -u https://target.com/FUZZ -w list.txt --filter-size 0
-
-# Match by regex in response body
 flood -u https://target.com/FUZZ -w list.txt --match-regex "admin|dashboard"
 ```
 
 ### Proxy Integration
+
+Route traffic through Burp Suite or replay matched results to a proxy.
+
 ```bash
-# Route all traffic through Burp Suite
 flood -u https://target.com/FUZZ -w list.txt -x http://127.0.0.1:8080
-
-# Replay only matched results to Burp
 flood -u https://target.com/FUZZ -w list.txt --replay-proxy http://127.0.0.1:8080
-```
-
-### Rate Limiting
-```bash
-# Cap at 50 requests per second
-flood -u https://target.com/FUZZ -w list.txt --rate 50
-
-# Auto-throttle is on by default (backs off on 429s)
-# Disable with:
-flood -u https://target.com/FUZZ -w list.txt --no-auto-throttle
-```
-
-### Output Formats
-```bash
-flood -u https://target.com/FUZZ -w list.txt -o results.json --output-format json
-flood -u https://target.com/FUZZ -w list.txt -o results.jsonl --output-format jsonl
-flood -u https://target.com/FUZZ -w list.txt -o results.csv --output-format csv
-flood -u https://target.com/FUZZ -w list.txt -o results.txt --output-format text
 ```
 
 ### Interactive Controls
 
-During a scan, use these keyboard shortcuts:
+Pause, resume, adjust threads, and save state during scans. Resume interrupted scans from saved state.
 
-| Key | Action |
-|-----|--------|
-| `p` | Pause / resume |
-| `q` | Quit and save state |
-| `+` | Increase threads by 10 |
-| `-` | Decrease threads by 10 |
-| `Ctrl+C` | Immediate stop |
-
-### Pause / Resume
 ```bash
-# Scan saves state on quit
 flood -u https://target.com/FUZZ -w big-wordlist.txt
-# Press q to quit...
-
-# Resume later
+# p: pause/resume | q: quit+save | +/-: threads | Ctrl+C: stop
 flood --resume flood-state-20260407-143022.json
 ```
 
 ---
 
-## Usage
+## Architecture
 
 ```
-flood [OPTIONS] -u <URL> -w <WORDLIST>
+src/
+├── main.rs          # CLI dispatch and config
+├── fuzzer/          # Core async fuzzing engine
+├── http/            # Request builder, response parser
+├── filter/          # Match/filter by code, size, regex
+├── output/          # JSON, JSONL, CSV, text formatters
+├── throttle/        # Auto-throttle and rate limiting
+├── recursive/       # Directory discovery and re-queue
+└── ui/              # Catppuccin Mocha terminal interface
 ```
 
-See `flood --help` for the complete flag reference.
+Three-layer design: CLI parses flags into a FuzzConfig, the async engine fans out requests across tokio tasks, and the filter pipeline processes responses. Auto-throttle monitors 429s and adjusts concurrency transparently.
 
 ---
 
-## Build
+## Platform Support
 
-```bash
-make build              # Development build
-make release            # Optimized release build
-make test               # Run all tests
-make lint               # Clippy lints
-make fmt                # Format code
-make opsec-check        # Inspect binary for metadata leaks
-make release-linux      # Cross-compile for Linux (musl)
-make release-windows    # Cross-compile for Windows
-make release-macos      # Cross-compile for macOS
-```
+| | Linux | Windows | macOS |
+|---|---|---|---|
+| Directory Fuzzing | Full | Full | Full |
+| VHost Discovery | Full | Full | Full |
+| Recursive Scan | Full | Full | Full |
+| Proxy Integration | Full | Full | Full |
+| Interactive Controls | Full | Full | Full |
+| Cross-compile | musl | MSVC | Native |
+
+---
+
+## Security
+
+Report vulnerabilities via [GitHub Security Advisories](https://github.com/Real-Fruit-Snacks/Flood/security/advisories). 90-day responsible disclosure.
+
+**Flood does not:**
+- Exploit discovered endpoints (not a vulnerability scanner)
+- Inject payloads or test for SQLi/XSS (not a web app scanner)
+- Brute-force authentication without explicit FUZZ placement
+- Evade WAF or IDS detection systems
 
 ---
 
 ## License
 
-MIT
+[MIT](LICENSE) — Copyright 2026 Real-Fruit-Snacks
