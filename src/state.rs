@@ -22,13 +22,16 @@ pub struct ScanState {
 
 pub fn save_state(state: &ScanState, path: &Path) -> Result<()> {
     let json = serde_json::to_string_pretty(state)?;
-    std::fs::write(path, json).with_context(|| format!("Failed to save state to {}", path.display()))?;
+    std::fs::write(path, json)
+        .with_context(|| format!("Failed to save state to {}", path.display()))?;
     Ok(())
 }
 
 pub fn load_state(path: &Path) -> Result<ScanState> {
-    let content = std::fs::read_to_string(path).with_context(|| format!("Failed to read state file: {}", path.display()))?;
-    let state: ScanState = serde_json::from_str(&content).with_context(|| format!("Failed to parse state file: {}", path.display()))?;
+    let content = std::fs::read_to_string(path)
+        .with_context(|| format!("Failed to read state file: {}", path.display()))?;
+    let state: ScanState = serde_json::from_str(&content)
+        .with_context(|| format!("Failed to parse state file: {}", path.display()))?;
     Ok(state)
 }
 

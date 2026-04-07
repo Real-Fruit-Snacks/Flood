@@ -256,10 +256,7 @@ pub async fn run(args: Cli) -> Result<()> {
                     .await
                     .unwrap_or(None);
 
-                if let Some(Event::Key(KeyEvent {
-                    code, ..
-                })) = evt
-                {
+                if let Some(Event::Key(KeyEvent { code, .. })) = evt {
                     match code {
                         KeyCode::Char('p') => {
                             let was_paused = paused.load(Ordering::Relaxed);
@@ -357,8 +354,7 @@ pub async fn run(args: Cli) -> Result<()> {
     let parsed_headers = requester::parse_headers(&args.headers)?;
 
     // Process work items at current depth (0)
-    let mut all_work: Vec<(Vec<String>, u32)> =
-        work_items.into_iter().map(|w| (w, 0u32)).collect();
+    let mut all_work: Vec<(Vec<String>, u32)> = work_items.into_iter().map(|w| (w, 0u32)).collect();
 
     // Resume from state if requested
     let resume_offset = if let Some(ref state_path) = args.resume {
@@ -372,9 +368,7 @@ pub async fn run(args: Cli) -> Result<()> {
         }
         // Restore previous results
         results.lock().await.extend(saved.results);
-        stats
-            .errors
-            .store(saved.errors, Ordering::Relaxed);
+        stats.errors.store(saved.errors, Ordering::Relaxed);
         saved.wordlist_position
     } else {
         0
@@ -493,8 +487,7 @@ pub async fn run(args: Cli) -> Result<()> {
                             if data.status == 429 && !no_auto_throttle {
                                 rate_limiter.throttle();
                                 if attempt < retries {
-                                    let backoff =
-                                        Duration::from_millis(500 * 2u64.pow(attempt));
+                                    let backoff = Duration::from_millis(500 * 2u64.pow(attempt));
                                     tokio::time::sleep(backoff).await;
                                     continue;
                                 }
@@ -507,8 +500,7 @@ pub async fn run(args: Cli) -> Result<()> {
                         Err(e) => {
                             last_err = Some(e);
                             if attempt < retries {
-                                let backoff =
-                                    Duration::from_millis(200 * 2u64.pow(attempt));
+                                let backoff = Duration::from_millis(200 * 2u64.pow(attempt));
                                 tokio::time::sleep(backoff).await;
                             }
                         }
@@ -584,9 +576,8 @@ pub async fn run(args: Cli) -> Result<()> {
                             };
                             let mut rq = recursion_queue.lock().await;
                             if rq.add(&new_base, depth) {
-                                let indicator = terminal::format_recursion_indicator(
-                                    &new_base, no_color,
-                                );
+                                let indicator =
+                                    terminal::format_recursion_indicator(&new_base, no_color);
                                 if let Some(ref pb) = progress {
                                     pb.suspend(|| println!("{}", indicator));
                                 }
@@ -710,7 +701,10 @@ pub async fn run(args: Cli) -> Result<()> {
             }
             "csv" => flood::output::csv_writer::write_csv(&final_results, path)?,
             "text" => flood::output::text::write_text(&final_results, path)?,
-            other => bail!("Unknown output format: {}. Use json, jsonl, csv, or text.", other),
+            other => bail!(
+                "Unknown output format: {}. Use json, jsonl, csv, or text.",
+                other
+            ),
         }
         if !args.silent {
             println!(

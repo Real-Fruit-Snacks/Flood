@@ -1,12 +1,20 @@
-use flood::recursion::{RecursionQueue, is_directory_response};
+use flood::recursion::{is_directory_response, RecursionQueue};
 
 #[test]
 fn test_is_directory_redirect_with_trailing_slash() {
-    assert!(is_directory_response(301, Some("https://example.com/images/"), "/images"));
+    assert!(is_directory_response(
+        301,
+        Some("https://example.com/images/"),
+        "/images"
+    ));
 }
 #[test]
 fn test_is_directory_redirect_without_trailing_slash() {
-    assert!(!is_directory_response(301, Some("https://example.com/other"), "/images"));
+    assert!(!is_directory_response(
+        301,
+        Some("https://example.com/other"),
+        "/images"
+    ));
 }
 #[test]
 fn test_is_directory_200_with_trailing_slash() {

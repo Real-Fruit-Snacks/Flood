@@ -1,4 +1,4 @@
-use flood::wordlist::{load_wordlist, cartesian_product};
+use flood::wordlist::{cartesian_product, load_wordlist};
 use std::io::Write;
 use tempfile::NamedTempFile;
 

@@ -60,8 +60,8 @@ pub async fn send_request(
     bearer: &Option<String>,
     cookie: &Option<String>,
 ) -> Result<ResponseData> {
-    let method = Method::from_str(method)
-        .map_err(|_| anyhow::anyhow!("Invalid HTTP method: {}", method))?;
+    let method =
+        Method::from_str(method).map_err(|_| anyhow::anyhow!("Invalid HTTP method: {}", method))?;
     let start = std::time::Instant::now();
     let mut req = client.request(method, url);
     for (name, value) in headers {

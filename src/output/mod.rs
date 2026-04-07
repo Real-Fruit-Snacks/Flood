@@ -1,7 +1,7 @@
-pub mod json;
 pub mod csv_writer;
-pub mod text;
+pub mod json;
 pub mod terminal;
+pub mod text;
 
 use serde::{Deserialize, Serialize};
 

@@ -1,5 +1,5 @@
-use flood::state::{ScanState, save_state, load_state};
 use flood::output::ScanResult;
+use flood::state::{load_state, save_state, ScanState};
 use tempfile::NamedTempFile;
 
 fn sample_state() -> ScanState {
@@ -15,9 +15,16 @@ fn sample_state() -> ScanState {
         wordlist_position: 5000,
         recursion_pending: vec![("/admin/".to_string(), 1)],
         results: vec![ScanResult {
-            url: "https://example.com/admin".to_string(), status: 200, size: 12847,
-            words: 1847, lines: 142, duration_ms: 85, redirect_to: None,
-            content_type: Some("text/html".to_string()), depth: 0, input: "admin".to_string(),
+            url: "https://example.com/admin".to_string(),
+            status: 200,
+            size: 12847,
+            words: 1847,
+            lines: 142,
+            duration_ms: 85,
+            redirect_to: None,
+            content_type: Some("text/html".to_string()),
+            depth: 0,
+            input: "admin".to_string(),
         }],
         elapsed_secs: 42,
         errors: 3,

@@ -44,7 +44,11 @@ pub fn cartesian_product(lists: &[Vec<String>]) -> Vec<Vec<String>> {
 }
 
 /// Expand a word with extensions.
-pub fn expand_with_extensions(word: &str, extensions: &[String], no_extension: bool) -> Vec<String> {
+pub fn expand_with_extensions(
+    word: &str,
+    extensions: &[String],
+    no_extension: bool,
+) -> Vec<String> {
     let mut results = Vec::new();
     if extensions.is_empty() || no_extension {
         results.push(word.to_string());

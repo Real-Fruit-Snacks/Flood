@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd \\\"C:/Users/Matt/Notes/Projects/missing/Flood\\\" && cargo fmt --check 2>&1\",\"description\":\"Check formatting\"}",
+  "error": "Exit code 1\nDiff in \\\\?\\C:\\Users\\Matt\\Notes\\Projects\\missing\\Flood\\src\\banner.rs:8:\n     |_|   |_|\\___/ \\___/ \\__,_|\"#;\n \n pub fn print_banner(version: &str, no_color: bool) {\n\u001b[31m-    if no_color { println!(\"{}  v{}\", BANNER, version); }\n\u001b[0m\u001b[31m-    else {\n\u001b[0m\u001b[32m+    if no_color {\n\u001b[0m\u001b[32m+        println!(\"{}  v{}\", BANNER, version);\n\u001b[0m\u001b[32m+    } else {\n\u001b[0m         let blue = colors::rgb(colors::BLUE);\n         let overlay = colors::rgb(colors::OVERLAY0);\n\u001b[31m-        println!(\"{} ...",
+  "timestamp": "2026-04-07T13:20:05.237Z",
+  "retry_count": 1
+}

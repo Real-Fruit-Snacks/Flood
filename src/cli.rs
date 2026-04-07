@@ -75,7 +75,12 @@ pub struct Cli {
 
     // === Match filters ===
     /// Match HTTP status codes
-    #[arg(long = "match-code", short = 'M', alias = "mc", default_value = "200,204,301,302,307,401,403")]
+    #[arg(
+        long = "match-code",
+        short = 'M',
+        alias = "mc",
+        default_value = "200,204,301,302,307,401,403"
+    )]
     pub match_code: String,
 
     /// Match response size (bytes)

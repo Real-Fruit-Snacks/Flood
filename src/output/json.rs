@@ -20,7 +20,10 @@ pub fn write_jsonl(results: &[ScanResult], path: &Path) -> Result<()> {
 
 pub fn append_jsonl(result: &ScanResult, path: &Path) -> Result<()> {
     use std::io::Write;
-    let mut file = std::fs::OpenOptions::new().create(true).append(true).open(path)?;
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)?;
     writeln!(file, "{}", serde_json::to_string(result)?)?;
     Ok(())
 }
