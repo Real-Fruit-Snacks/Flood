@@ -1,5 +1,5 @@
-/// Catppuccin Mocha color palette for terminal output.
-/// Each constant is an RGB tuple used with crossterm's Color::Rgb.
+// Catppuccin Mocha color palette for terminal output.
+// Each constant is an RGB tuple used with crossterm's Color::Rgb.
 
 // Base colors
 pub const BASE: (u8, u8, u8) = (30, 30, 46); // #1e1e2e

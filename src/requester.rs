@@ -50,6 +50,7 @@ pub fn build_replay_client(proxy_url: &str, config: &RequesterConfig) -> Result<
         .context("Failed to build replay HTTP client")
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn send_request(
     client: &Client,
     method: &str,

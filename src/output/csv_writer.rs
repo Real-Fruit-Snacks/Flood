@@ -4,7 +4,7 @@ use std::path::Path;
 
 pub fn write_csv(results: &[ScanResult], path: &Path) -> Result<()> {
     let mut wtr = csv::Writer::from_path(path)?;
-    wtr.write_record(&[
+    wtr.write_record([
         "url",
         "status",
         "size",
@@ -17,7 +17,7 @@ pub fn write_csv(results: &[ScanResult], path: &Path) -> Result<()> {
         "input",
     ])?;
     for r in results {
-        wtr.write_record(&[
+        wtr.write_record([
             &r.url,
             &r.status.to_string(),
             &r.size.to_string(),

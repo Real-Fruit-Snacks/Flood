@@ -219,11 +219,6 @@ pub struct Cli {
     pub random_agent: bool,
 }
 
-/// Parse CLI arguments and return the validated config.
-pub fn parse() -> Cli {
-    Cli::parse()
-}
-
 /// Parse comma-separated status codes into a Vec<u16>.
 pub fn parse_status_codes(input: &str) -> anyhow::Result<Vec<u16>> {
     input

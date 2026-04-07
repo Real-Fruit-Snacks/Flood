@@ -563,24 +563,24 @@ pub async fn run(args: Cli) -> Result<()> {
                     let _ = result_tx.send(scan_result);
 
                     // Check for directory response for recursion
-                    if recurse {
-                        if recursion::is_directory_response(
+                    if recurse
+                        && recursion::is_directory_response(
                             resp.status,
                             resp.redirect_to.as_deref(),
                             &url,
-                        ) {
-                            let new_base = if url.ends_with('/') {
-                                format!("{}FUZZ", url)
-                            } else {
-                                format!("{}/FUZZ", url)
-                            };
-                            let mut rq = recursion_queue.lock().await;
-                            if rq.add(&new_base, depth) {
-                                let indicator =
-                                    terminal::format_recursion_indicator(&new_base, no_color);
-                                if let Some(ref pb) = progress {
-                                    pb.suspend(|| println!("{}", indicator));
-                                }
+                        )
+                    {
+                        let new_base = if url.ends_with('/') {
+                            format!("{}FUZZ", url)
+                        } else {
+                            format!("{}/FUZZ", url)
+                        };
+                        let mut rq = recursion_queue.lock().await;
+                        if rq.add(&new_base, depth) {
+                            let indicator =
+                                terminal::format_recursion_indicator(&new_base, no_color);
+                            if let Some(ref pb) = progress {
+                                pb.suspend(|| println!("{}", indicator));
                             }
                         }
                     }
