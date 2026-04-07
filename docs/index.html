@@ -309,18 +309,14 @@
                 </div>
                 <div class="terminal animate" style="transition-delay:.25s">
                     <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">usage</span></div>
-<span class="t-m"># Directory enumeration</span>
+                    <div class="terminal-body"><pre><span class="t-m"># Directory enumeration</span>
 <span class="t-g">$</span> flood -u https://target.com/FUZZ -w common.txt -r
 
-
 <span class="t-m"># VHost discovery</span>
-
 <span class="t-g">$</span> flood -u https://target.com -H "Host: FUZZ.target.com" -w subs.txt
 
-
 <span class="t-m"># Parameter fuzzing</span>
-<span class="t-g">$</span> flood -u https://target.com/login -d "pass=FUZZ" -w passwords.txt
-                </div>
+<span class="t-g">$</span> flood -u https://target.com/login -d "pass=FUZZ" -w passwords.txt</pre></div>
             </div>
         </div>
     </section>
