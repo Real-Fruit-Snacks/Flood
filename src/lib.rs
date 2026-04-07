@@ -5,4 +5,5 @@ pub mod fuzz;
 pub mod output;
 pub mod rate_limiter;
 pub mod recursion;
+pub mod state;
 pub mod wordlist;
