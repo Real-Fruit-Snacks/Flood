@@ -1,5 +1,4 @@
 mod cli;
-mod colors;
 
 use clap::Parser;
 
