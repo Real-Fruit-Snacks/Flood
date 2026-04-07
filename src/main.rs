@@ -1,5 +1,14 @@
+mod cli;
 mod colors;
 
+use clap::Parser;
+
 fn main() {
-    println!("Flood v{}", env!("CARGO_PKG_VERSION"));
+    let cli = cli::Cli::parse();
+
+    if !cli.silent {
+        println!("Flood v{}", env!("CARGO_PKG_VERSION"));
+        println!("Target: {}", cli.url);
+        println!("Wordlists: {:?}", cli.wordlist);
+    }
 }
