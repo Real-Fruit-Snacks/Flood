@@ -1,0 +1,29 @@
+name: Feature Request
+description: Suggest a feature for Flood
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Fuzzing Mode
+        - Filtering
+        - Output
+        - Performance
+        - UI/UX
+        - Other
+    validations:
+      required: true

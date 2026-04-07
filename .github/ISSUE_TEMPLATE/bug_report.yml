@@ -1,0 +1,47 @@
+name: Bug Report
+description: Report a bug in Flood
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Fuzzing Engine
+        - Recursive Discovery
+        - VHost Discovery
+        - Filtering
+        - Output Formats
+        - Proxy Integration
+        - Auto-Throttle
+        - Terminal UI
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      placeholder: "Ubuntu 22.04 / Windows 11 / macOS 14"
+  - type: input
+    id: version
+    attributes:
+      label: Flood Version

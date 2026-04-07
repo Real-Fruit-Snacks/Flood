@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flood — Async Web Fuzzer</title>
+    <meta name="description" content="Fast async Rust web fuzzer. Directory enumeration, VHost discovery, parameter fuzzing, recursive scanning, auto-throttle, Catppuccin Mocha UI.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext x='16' y='24' text-anchor='middle' font-family='Inter,sans-serif' font-size='24' font-weight='800' fill='%2374c7ec'%3EF%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --accent1:#94e2d5;--accent2:#a6e3a1;--accentmid:#89dceb;
+            --accentrgb:148,226,213;
+            --text:#cdd6f4;--sub1:#bac2de;--sub0:#a6adc8;
+            --ov2:#9399b2;--ov1:#7f849c;--ov0:#6c7086;
+            --sf2:#585b70;--sf1:#45475a;--sf0:#313244;
+            --base:#1e1e2e;--mantle:#181825;--crust:#11111b;
+            --green:#a6e3a1;--yellow:#f9e2af;--red:#f38ba8;
+            --peach:#fab387;--mauve:#cba6f7;--teal:#94e2d5;
+        }
+        body{font-family:'Inter',system-ui,sans-serif;background:var(--crust);color:var(--text);line-height:1.7;overflow-x:hidden}
+        ::selection{background:rgba(var(--accentrgb),0.3);color:var(--text)}
+        .container{max-width:1140px;margin:0 auto;padding:0 28px}
+        code{font-family:'JetBrains Mono',monospace;background:var(--mantle);padding:2px 7px;border-radius:3px;font-size:.88em;color:var(--green)}
+
+        /* ── Nav ── */
+        .nav{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(17,17,27,0.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(49,50,68,0.5);z-index:1000;display:flex;align-items:center;justify-content:center}
+        .nav-inner{max-width:1140px;width:100%;padding:0 28px;display:flex;align-items:center;justify-content:space-between}
+        .nav-logo{font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-decoration:none}
+        .nav-links{display:flex;align-items:center;gap:28px}
+        .nav-links a{font-size:13px;font-weight:500;color:var(--ov0);text-decoration:none;transition:color .2s}
+        .nav-links a:hover{color:var(--text)}
+        .nav-cta{background:linear-gradient(135deg,var(--accent1),var(--accentmid));color:var(--crust);padding:7px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;transition:box-shadow .2s,transform .2s}
+        .nav-cta:hover{box-shadow:0 0 20px rgba(var(--accentrgb),0.3);transform:translateY(-1px)}
+
+        /* ── Hero ── */
+        .hero{padding:140px 0 80px;text-align:center;position:relative}
+        .hero::before{content:'';position:absolute;top:60px;left:50%;transform:translateX(-50%);width:800px;height:400px;background:radial-gradient(ellipse,rgba(var(--accentrgb),0.08) 0%,transparent 60%);pointer-events:none}
+        .hero-logo{position:relative;max-width:600px;margin:0 auto 32px}
+        .hero-logo img{width:100%;height:auto}
+        .hero-tagline{position:relative;font-size:clamp(24px,3.5vw,38px);font-weight:700;line-height:1.2;margin-bottom:16px;background:linear-gradient(135deg,var(--accent1),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .hero-desc{position:relative;font-size:16px;color:var(--ov0);max-width:560px;margin:0 auto 32px}
+        .hero-ctas{position:relative;display:flex;gap:12px;justify-content:center;margin-bottom:48px}
+        .btn-primary{background:linear-gradient(135deg,var(--accent1),var(--accentmid));color:var(--crust);padding:12px 28px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;text-decoration:none;transition:box-shadow .2s,transform .2s}
+        .btn-primary:hover{box-shadow:0 0 24px rgba(var(--accentrgb),0.35);transform:translateY(-2px)}
+        .btn-secondary{background:var(--sf0);color:var(--text);padding:12px 28px;border-radius:8px;border:1px solid var(--sf1);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;text-decoration:none;transition:all .2s}
+        .btn-secondary:hover{background:var(--sf1);border-color:var(--sf2)}
+
+        /* ── Terminal ── */
+        .terminal{position:relative;max-width:800px;margin:0 auto;background:var(--mantle);border:1px solid var(--sf0);border-radius:12px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.5),0 0 24px rgba(var(--accentrgb),0.06)}
+        .terminal-bar{background:var(--crust);padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--sf0)}
+        .terminal-dot{width:12px;height:12px;border-radius:50%}
+        .terminal-dot:nth-child(1){background:var(--red)}
+        .terminal-dot:nth-child(2){background:var(--yellow)}
+        .terminal-dot:nth-child(3){background:var(--green)}
+        .terminal-label{flex:1;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ov0)}
+        .terminal-body{padding:24px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.9;text-align:left}
+        .terminal-body pre{margin:0;white-space:pre-wrap;word-wrap:break-word}
+        .t-g{color:var(--green)}.t-b{color:var(--accent1)}.t-m{color:var(--sub0)}.t-p{color:var(--peach)}
+
+        /* ── Stats ── */
+        .stats{display:flex;justify-content:center;gap:40px;padding:60px 0;position:relative}
+        .stat{text-align:center}
+        .stat-num{font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:700;color:var(--accent1);line-height:1}
+        .stat-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--sf2);margin-top:6px;letter-spacing:2px;text-transform:uppercase}
+        .stat-div{width:1px;height:48px;background:var(--sf0);align-self:center}
+
+        /* ── Sections ── */
+        section{padding:80px 0}
+        .section-label{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--accent1);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px}
+        .section-title{font-size:clamp(28px,4vw,40px);font-weight:700;margin-bottom:12px;letter-spacing:-.02em}
+        .section-desc{font-size:15px;color:var(--ov0);margin-bottom:48px;max-width:560px}
+        .gradient-line{height:1px;background:linear-gradient(90deg,transparent,var(--accent1),var(--accent2),transparent);margin:0 auto;max-width:600px}
+
+        /* ── Bento ── */
+        .bento{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+        .bento-card{background:var(--mantle);border:1px solid var(--sf0);border-radius:12px;padding:28px;transition:all .25s;position:relative;overflow:hidden}
+        .bento-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent1),var(--accent2));opacity:0;transition:opacity .25s}
+        .bento-card:hover{transform:translateY(-3px);border-color:var(--sf1);box-shadow:0 12px 32px rgba(0,0,0,0.25),0 0 20px rgba(var(--accentrgb),0.06)}
+        .bento-card:hover::before{opacity:1}
+        .bento-hero{grid-column:span 2}
+        .bento-card h3{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--accent1);margin-bottom:8px}
+        .bento-card p{font-size:13.5px;color:var(--sub0);line-height:1.6}
+        .bento-card .mini-terminal{background:var(--crust);border-radius:8px;padding:14px;margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.8;text-align:left}
+        .bento-stat{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+        .bento-stat .big{font-family:'JetBrains Mono',monospace;font-size:42px;font-weight:700;color:var(--accent1)}
+        .bento-stat .label{font-size:12px;color:var(--sf2);margin-top:4px;letter-spacing:1px}
+
+        /* ── Pills ── */
+        .pills{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+        .pill{background:var(--mantle);border:1px solid var(--sf0);border-radius:20px;padding:9px 18px;font-family:'JetBrains Mono',monospace;font-size:12px;display:flex;align-items:center;gap:8px;transition:all .2s;color:var(--sub0)}
+        .pill:hover{border-color:var(--sf1);background:var(--base)}
+        .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+        .dot-g{background:var(--green)}.dot-y{background:var(--yellow)}.dot-n{background:var(--sf2)}
+
+        /* ── Arch ── */
+        .arch-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+        .arch-card{background:var(--mantle);border:1px solid var(--sf0);border-radius:12px;padding:28px;transition:border-color .2s}
+        .arch-card:hover{border-color:var(--sf1)}
+        .arch-num{display:inline-flex;width:30px;height:30px;background:linear-gradient(135deg,var(--accent1),var(--accentmid));color:var(--crust);border-radius:50%;align-items:center;justify-content:center;font-weight:700;font-size:14px;margin-bottom:14px}
+        .arch-card h3{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--teal);margin-bottom:8px}
+        .arch-card p{font-size:13.5px;color:var(--sub0);line-height:1.6}
+
+        /* ── Two Col ── */
+        .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+        /* ── Detection ── */
+        .detect-card{background:var(--mantle);border-radius:12px;padding:28px}
+        .detect-card h3{font-size:14px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+        .detect-card ul{list-style:none;font-size:13px;color:var(--sub0);line-height:2.2}
+        .detect-hidden{border-left:3px solid var(--green)}.detect-hidden h3{color:var(--green)}
+        .detect-visible{border-left:3px solid var(--yellow)}.detect-visible h3{color:var(--yellow)}
+
+        /* ── Footer ── */
+        footer{padding:48px 0;margin-top:40px}
+        .footer-line{height:1px;background:linear-gradient(90deg,transparent,var(--accent1),var(--accent2),transparent);margin-bottom:48px}
+        .footer-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:32px}
+        .footer-grid h4{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);margin-bottom:14px;letter-spacing:2px;text-transform:uppercase}
+        .footer-grid ul{list-style:none}
+        .footer-grid li{margin-bottom:8px}
+        .footer-grid a{color:var(--ov2);text-decoration:none;font-size:13px;transition:color .2s}
+        .footer-grid a:hover{color:var(--accent1)}
+        .footer-grid p{font-size:13px;color:var(--ov1);line-height:1.7}
+        .footer-bottom{text-align:center;margin-top:36px;padding-top:24px;border-top:1px solid var(--sf0);font-size:12px;color:var(--ov0)}
+
+        /* ── Animate ── */
+        .animate{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+        .animate.visible{opacity:1;transform:translateY(0)}
+        .animate-scale{opacity:0;transform:translateY(24px) scale(.97);transition:opacity .8s ease,transform .8s ease}
+        .animate-scale.visible{opacity:1;transform:translateY(0) scale(1)}
+
+        /* ── Responsive ── */
+        @media(max-width:960px){.bento{grid-template-columns:1fr 1fr}.bento-hero{grid-column:span 2}.two-col,.arch-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:repeat(2,1fr)}.stats{flex-wrap:wrap;gap:24px}}
+        @media(max-width:600px){.container{padding:0 16px}.hero{padding:100px 0 48px}.bento{grid-template-columns:1fr}.bento-hero{grid-column:span 1}.stats{gap:16px}.stat-div{display:none}.nav-links a:not(.nav-cta){display:none}.footer-grid{grid-template-columns:1fr}.pills{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}}
+
+        a:focus-visible{outline:2px solid var(--accent1);outline-offset:2px}
+    </style>
+</head>
+<body>
+
+    <!-- Nav -->
+    <nav class="nav"><div class="nav-inner">
+        <a href="#" class="nav-logo">Flood</a>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#architecture">Architecture</a>
+            <a href="https://github.com/Real-Fruit-Snacks/Flood">GitHub</a>
+            <a href="https://github.com/Real-Fruit-Snacks/Flood/releases/latest" class="nav-cta">Download</a>
+        </div>
+    </div></nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-logo animate"><img src="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/main/docs/assets/logo-dark.svg" alt="Flood"></div>
+            <h1 class="hero-tagline animate" style="transition-delay:.1s">Fuzz everything, miss nothing</h1>
+            <p class="hero-desc animate" style="transition-delay:.2s">Async Rust web fuzzer with FUZZ keyword placement. Directory enumeration, VHost discovery, parameter fuzzing. 100 concurrent requests, recursive scanning, auto-throttle on 429s.</p>
+            <div class="hero-ctas animate" style="transition-delay:.3s">
+                <a href="https://github.com/Real-Fruit-Snacks/Flood/releases/latest" class="btn-primary">Download Latest</a>
+                <a href="https://github.com/Real-Fruit-Snacks/Flood" class="btn-secondary">View Source</a>
+            </div>
+            <div class="terminal animate-scale" style="transition-delay:.4s">
+                <div class="terminal-bar">
+                    <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+                    <span class="terminal-label">flood</span>
+                </div>
+                <div class="terminal-body"><pre><span class="t-g">$</span> flood -u https://target.com/FUZZ -w common.txt -r -e php,bak
+<span class="t-b">200</span>  <span class="t-m">12.4KB  /admin/</span>
+<span class="t-b">200</span>  <span class="t-m"> 8.1KB  /admin/config.php.bak</span>
+<span class="t-b">301</span>  <span class="t-m"> 0.2KB  /api/</span>
+<span class="t-b">200</span>  <span class="t-m"> 3.7KB  /api/v2/users</span>
+
+<span class="t-p">Recursing into /admin/ /api/ /api/v2/</span>
+<span class="t-m">4,218 requests | 142 req/s | 29 results</span></pre></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <div class="container">
+        <div class="stats animate">
+            <div class="stat"><div class="stat-num" data-target="100">0</div><div class="stat-label">Concurrency</div></div>
+            <div class="stat-div"></div>
+            <div class="stat"><div class="stat-num" data-target="5">0</div><div class="stat-label">Fuzz Modes</div></div>
+            <div class="stat-div"></div>
+            <div class="stat"><div class="stat-num" data-target="4">0</div><div class="stat-label">Output Formats</div></div>
+            <div class="stat-div"></div>
+            <div class="stat"><div class="stat-num" data-target="6">0</div><div class="stat-label">Filter Types</div></div>
+            <div class="stat-div"></div>
+            <div class="stat"><div class="stat-num" data-target="6">0</div><div class="stat-label">Filter Types</div></div>
+        </div>
+        <div class="gradient-line"></div>
+    </div>
+
+    <!-- Features Bento -->
+    <section id="features">
+        <div class="container">
+            <div class="section-label animate">FEATURES</div>
+            <h2 class="section-title animate" style="transition-delay:.08s">Fuzz directories, vhosts, and parameters</h2>
+            <p class="section-desc animate" style="transition-delay:.16s">FUZZ keyword placement anywhere in the request. Recursive discovery, advanced filtering, proxy replay, auto-throttle.</p>
+
+            <div class="bento">
+                <div class="bento-card bento-hero animate" style="transition-delay:.1s">
+                    <h3>Directory Enumeration</h3>
+                    <p>FUZZ keyword in any URL position. Automatic extension appending, recursive scanning into discovered directories, configurable depth limit.</p>
+                    <div class="mini-terminal"><span class="t-g">$</span> flood -u https://target.com/FUZZ -w common.txt -r<br><span class="t-b">200  /admin/</span><br><span class="t-p">recursing into /admin/ — Ctrl+C to disconnect</span></div>
+                </div>
+                <div class="bento-card bento-stat animate" style="transition-delay:.18s">
+                    <div class="big">100</div>
+                    <div class="label">Default Threads</div>
+                </div>
+                <div class="bento-card animate" style="transition-delay:.2s">
+                    <h3 style="color:var(--mauve)">VHost Discovery</h3>
+                    <p>FUZZ in Host header for subdomain enumeration. Filter by response size to strip default pages. Wildcard detection.</p>
+                </div>
+                <div class="bento-card animate" style="transition-delay:.28s">
+                    <h3 style="color:var(--green)">Parameter Fuzzing</h3>
+                    <p>FUZZ in POST data, query strings, cookies, or custom headers. Clusterbomb mode with FUZZ/FUZ2Z for multiple wordlists.</p>
+                </div>
+                <div class="bento-card animate" style="transition-delay:.36s">
+                    <h3 style="color:var(--peach)">Relay & SOCKS5</h3>
+                    <p>Port forwarding, multi-hop chain relay, and proxychains-compatible SOCKS5 proxy server.</p>
+                </div>
+                <div class="bento-card bento-stat animate" style="transition-delay:.1s">
+                    <div class="big" style="color:var(--teal)">4</div>
+                    <div class="label">Output Formats</div>
+                </div>
+                <div class="bento-card bento-hero animate" style="transition-delay:.18s">
+                    <h3 style="color:var(--red)">Auto-Throttle</h3>
+                    <p>Automatic backoff on 429 responses. Configurable rate limiting. Interactive thread adjustment during scans. Pause, resume, and save state for long-running fuzzes.</p>
+                    <div class="mini-terminal"><span class="t-g">$</span> flood -u https://target.com/FUZZ -w big-list.txt<br><span class="t-p">429 detected — throttling to 20 req/s</span><br><span class="t-m">p: pause | q: save+quit | +/-: threads — padding 256B, jitter 50-150ms</span></div>
+                </div>
+                <div class="bento-card animate" style="transition-delay:.26s">
+                    <h3 style="color:var(--yellow)">Proxy Replay</h3>
+                    <p>Route all traffic through Burp Suite or replay only matched results to a proxy for manual inspection.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Capabilities -->
+    <section style="background:var(--mantle)">
+        <div class="container">
+            <div class="section-label animate">CAPABILITIES</div>
+            <h2 class="section-title animate" style="transition-delay:.08s">Fuzzing capabilities</h2>
+            <p class="section-desc animate" style="transition-delay:.16s">Full fuzzing operations on Linux, Windows, and macOS. Async tokio engine with configurable concurrency.</p>
+            <div class="pills">
+                <div class="pill animate"><span class="dot dot-g"></span>Dir Enumeration</div>
+                <div class="pill animate"><span class="dot dot-g"></span>VHost Discovery</div>
+                <div class="pill animate"><span class="dot dot-g"></span>Param Fuzzing</div>
+                <div class="pill animate"><span class="dot dot-g"></span>Recursive Scan</div>
+                <div class="pill animate"><span class="dot dot-g"></span>Clusterbomb</div>
+                <div class="pill animate"><span class="dot dot-g"></span>Status Filter</div>
+                <div class="pill animate"><span class="dot dot-g"></span>Size Filter</div>
+                <div class="pill animate"><span class="dot dot-g"></span>Regex Match</div>
+                <div class="pill animate"><span class="dot dot-g"></span>Proxy Replay</div>
+                <div class="pill animate"><span class="dot dot-g"></span>Auto-Throttle</div>
+                <div class="pill animate"><span class="dot dot-g"></span>Rate Limiting</div>
+                <div class="pill animate"><span class="dot dot-g"></span>Pause/Resume</div>
+                <div class="pill animate"><span class="dot dot-g"></span>JSON Output</div>
+                <div class="pill animate"><span class="dot dot-g"></span>CSV Output</div>
+                <div class="pill animate"><span class="dot dot-g"></span>Extension Append</div>
+                <div class="pill animate"><span class="dot dot-y"></span>State Save/Resume</div>
+                <div class="pill animate"><span class="dot dot-n"></span>WAF Evasion</div>
+            </div>
+            <div style="margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ov0)">
+                <span style="color:var(--green)">●</span> Full &nbsp;
+                <span style="color:var(--yellow)">●</span> Linux Only &nbsp;
+                <span style="color:var(--sf2)">●</span> Not Supported
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture -->
+    <section id="architecture">
+        <div class="container">
+            <div class="section-label animate">ARCHITECTURE</div>
+            <h2 class="section-title animate" style="transition-delay:.08s">Three-layer design</h2>
+            <p class="section-desc animate" style="transition-delay:.16s">CLI parses flags into FuzzConfig, async engine fans out requests across tokio tasks, filter pipeline processes responses.</p>
+            <div class="arch-grid">
+                <div class="arch-card animate" style="transition-delay:.1s"><div class="arch-num">1</div><h3>CLI Layer</h3><p>Argument parsing into <code>FuzzConfig</code>. FUZZ/FUZ2Z keyword detection, wordlist loading, filter chain assembly. Supports resume from saved state.</p></div>
+                <div class="arch-card animate" style="transition-delay:.2s"><div class="arch-num">2</div><h3>Async Engine</h3><p>tokio runtime fans out HTTP requests. Semaphore-based concurrency control. Auto-throttle monitors 429s and adjusts rate transparently.</p></div>
+                <div class="arch-card animate" style="transition-delay:.3s"><div class="arch-num">3</div><h3>Filter Pipeline</h3><p>Response processing chain: status code, size, word count, line count, regex matching. Matched results forwarded to output and optional replay proxy.</p></div>
+                <div class="arch-card animate" style="transition-delay:.4s"><div class="arch-num">4</div><h3>Output + UI</h3><p>JSON, JSONL, CSV, text formatters. Catppuccin Mocha terminal with real-time progress, interactive controls, and state serialization.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Getting Started -->
+    <section style="background:var(--mantle)">
+        <div class="container">
+            <div class="section-label animate">GETTING STARTED</div>
+            <h2 class="section-title animate" style="transition-delay:.08s">Build and fuzz</h2>
+            <p class="section-desc animate" style="transition-delay:.16s">Single Rust binary. Build and start fuzzing in under a minute.</p>
+            <div class="two-col">
+                <div class="terminal animate" style="transition-delay:.1s">
+                    <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">build</span></div>
+                    <div class="terminal-body"><pre><span class="t-g">$</span> git clone https://github.com/Real-Fruit-Snacks/Flood.git
+<span class="t-g">$</span> cd Flood && make release
+
+<span class="t-m"># Static binary for target deployment</span>
+<span class="t-m"># Cross-compile</span>
+
+<span class="t-g">$</span> make release-linux
+<span class="t-g">$</span> make release-windows</pre></div>
+                </div>
+                <div class="terminal animate" style="transition-delay:.25s">
+                    <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">usage</span></div>
+<span class="t-m"># Directory enumeration</span>
+<span class="t-g">$</span> flood -u https://target.com/FUZZ -w common.txt -r
+
+
+<span class="t-m"># VHost discovery</span>
+
+<span class="t-g">$</span> flood -u https://target.com -H "Host: FUZZ.target.com" -w subs.txt
+
+
+<span class="t-m"># Parameter fuzzing</span>
+<span class="t-g">$</span> flood -u https://target.com/login -d "pass=FUZZ" -w passwords.txt
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Detection -->
+    <section>
+        <div class="container">
+            <div class="section-label animate">DETECTION AWARENESS</div>
+            <h2 class="section-title animate" style="transition-delay:.08s">Know the boundaries</h2>
+            <div class="two-col" style="margin-top:32px">
+                <div class="detect-card detect-hidden animate" style="transition-delay:.1s">
+                    <h3>Hidden From</h3>
+                    <ul>
+                        <li>Proxy integration — route through Burp for analysis</li>
+                        <li>Rate limiting — configurable req/s cap</li>
+                        <li>Auto-throttle — automatic 429 backoff</li>
+                        <li>Recursive depth limit — prevents infinite loops</li>
+                        <li>State save — resume interrupted scans</li>
+                    </ul>
+                </div>
+                <div class="detect-card detect-visible animate" style="transition-delay:.2s">
+                    <h3>Visible To</h3>
+                    <ul>
+                        <li>WAF/IPS — request pattern detection</li>
+                        <li>Rate-based detection — high request volume</li>
+                        <li>Access logs — all requests logged server-side</li>
+                        <li>Response codes — mass 404s visible in logs</li>
+                        <li>IP blocking — source IP visible to target</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-line"></div>
+            <div class="footer-grid">
+                <div><h4>Documentation</h4><ul><li><a href="https://github.com/Real-Fruit-Snacks/Flood#quick-start">Quick Start</a></li><li><a href="https://github.com/Real-Fruit-Snacks/Flood#features">Features</a></li><li><a href="https://github.com/Real-Fruit-Snacks/Flood#architecture">Architecture</a></li><li><a href="https://github.com/Real-Fruit-Snacks/Flood#security">Security</a></li></ul></div>
+                <div><h4>Resources</h4><ul><li><a href="https://github.com/Real-Fruit-Snacks/Flood/releases/latest">Latest Release</a></li><li><a href="https://github.com/Real-Fruit-Snacks/Flood/issues">Report Issue</a></li><li><a href="https://github.com/Real-Fruit-Snacks/Flood/blob/main/CONTRIBUTING.md">Contributing</a></li><li><a href="https://github.com/Real-Fruit-Snacks/Flood/blob/main/CHANGELOG.md">Changelog</a></li></ul></div>
+                <div><h4>Toolkit</h4><ul><li><a href="https://github.com/Real-Fruit-Snacks/Rapids">Rapids</a></li><li><a href="https://github.com/Real-Fruit-Snacks/Deluge">Deluge</a></li><li><a href="https://github.com/Real-Fruit-Snacks/Maelstrom">Maelstrom</a></li><li><a href="https://github.com/Real-Fruit-Snacks">View All →</a></li></ul></div>
+                <div><h4>License</h4><p>MIT License<br>Copyright © 2026<br>Real-Fruit-Snacks</p></div>
+            </div>
+            <div class="footer-bottom">Part of the Real-Fruit-Snacks security toolkit</div>
+        </div>
+    </footer>
+
+    <script>
+    // Scroll animations
+    const obs=new IntersectionObserver(e=>{e.forEach(el=>{if(el.isIntersecting){el.target.classList.add('visible');obs.unobserve(el.target)}})},{threshold:.1,rootMargin:'0px 0px -50px 0px'});
+    document.querySelectorAll('.animate,.animate-scale').forEach(el=>obs.observe(el));
+
+    // Counter animation
+    function countUp(el){const t=parseInt(el.dataset.target),s=el.dataset.suffix||'',p=el.dataset.prefix||'',d=1500,st=performance.now();function u(n){const pr=Math.min((n-st)/d,1),e=1-Math.pow(1-pr,3);el.textContent=p+Math.floor(t*e)+s;if(pr<1)requestAnimationFrame(u)}requestAnimationFrame(u)}
+    const sobs=new IntersectionObserver(e=>{e.forEach(el=>{if(el.isIntersecting){countUp(el.target);sobs.unobserve(el.target)}})},{threshold:.5});
+    document.querySelectorAll('.stat-num').forEach(el=>sobs.observe(el));
+
+    // Nav scroll
+    window.addEventListener('scroll',()=>{document.querySelector('.nav').style.borderBottomColor=window.scrollY>20?'rgba(49,50,68,0.8)':'rgba(49,50,68,0.3)'});
+    </script>
+</body>
+</html>
