@@ -1,9 +1,9 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/main/docs/assets/logo-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/main/docs/assets/logo-light.svg">
-  <img alt="Flood" src="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/main/docs/assets/logo-dark.svg" width="520">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/master/docs/assets/logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/master/docs/assets/logo-light.svg">
+  <img alt="Flood" src="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/master/docs/assets/logo-dark.svg" width="520">
 </picture>
 
 ![Rust](https://img.shields.io/badge/language-Rust-orange.svg)
