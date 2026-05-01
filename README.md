@@ -1,152 +1,150 @@
-<div align="center">
-
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/master/docs/assets/logo-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/master/docs/assets/logo-light.svg">
-  <img alt="Flood" src="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/master/docs/assets/logo-dark.svg" width="520">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/main/docs/assets/logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/main/docs/assets/logo-light.svg">
+  <img alt="Flood" src="https://raw.githubusercontent.com/Real-Fruit-Snacks/Flood/main/docs/assets/logo-dark.svg" width="100%">
 </picture>
 
-![Rust](https://img.shields.io/badge/language-Rust-orange.svg)
-![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
+> [!IMPORTANT]
+> **Fast async web fuzzer with recursive discovery.** Directory enumeration, virtual host discovery, and parameter fuzzing with 100 concurrent requests, recursive scanning, auto-throttle on 429s, FUZZ keyword placement, and Catppuccin Mocha terminal UI.
 
-**Fast web fuzzer with recursive discovery.**
-
-Async Rust web fuzzer for directory enumeration, virtual host discovery, and parameter fuzzing. 100 concurrent requests, recursive scanning, auto-throttle on 429s, FUZZ keyword placement, Catppuccin Mocha terminal UI.
-
-> **Authorization Required**: Designed exclusively for authorized security testing with explicit written permission.
-
-</div>
+> *A flood is an overwhelming surge of water that covers everything in its path, unstoppable and thorough. Felt fitting for a tool that sends massive concurrent requests across a target to discover every hidden endpoint and path.*
 
 ---
 
-## Quick Start
+## §1 / Premise
 
-**Prerequisites:** Rust toolchain (stable), a wordlist
+Flood is an **async Rust web fuzzer** built for comprehensive discovery through overwhelming concurrent requests. Point it at a target with FUZZ keyword placement and it systematically enumerates directories, discovers virtual hosts, fuzzes parameters, and recursively scans discovered paths.
+
+The async engine fans out 100 concurrent requests across tokio tasks with intelligent auto-throttling that monitors 429 responses and adjusts concurrency transparently. Advanced filtering by status codes, response size, word count, line count, and regex patterns. Interactive controls allow real-time adjustment of threads, pause/resume, and state saving for large scans.
+
+**Authorization Required**: Designed exclusively for authorized security testing with explicit written permission.
+
+---
+
+## §2 / Specs
+
+| KEY        | VALUE                                                                       |
+|------------|-----------------------------------------------------------------------------|
+| **FUZZING**    | **Directory enum · VHost discovery · parameter fuzzing · clusterbomb mode** |
+| **CONCURRENCY** | **100 async requests** with auto-throttle monitoring 429 responses |
+| **FILTERING**  | **Status code · response size · word count · line count · regex matching** |
+| **RECURSIVE**  | **Auto-discovery and re-queue** with configurable depth limits |
+| **INTEGRATION** | **Burp Suite proxy · replay to proxy · JSON/CSV/JSONL output formats** |
+| **CONTROLS**   | **Real-time pause/resume · thread adjustment · state save/restore** |
+| **KEYWORDS**   | **FUZZ/FUZ2Z placement** in URLs, headers, POST data, and query strings |
+| **PLATFORM**   | **Linux · Windows · macOS** with cross-compilation and static linking |
+| **UI**         | **Catppuccin Mocha terminal interface** with real-time progress and stats |
+| **STACK**      | **Pure Rust async/tokio · HTTP client · filtering pipeline · interactive TUI** |
+
+---
+
+## §3 / Quickstart
+
+**Prerequisites:** Rust toolchain (stable), wordlists
 
 ```bash
 git clone https://github.com/Real-Fruit-Snacks/Flood.git
 cd Flood
 make release
-```
 
-**Verify:**
+# Basic directory enumeration
+./target/release/flood -u https://example.com/FUZZ -w common.txt
 
-```bash
-./target/release/flood --help
-./target/release/flood -u https://example.com/FUZZ -w wordlist.txt
-```
+# Virtual host discovery
+./target/release/flood -u https://target.com -H "Host: FUZZ.target.com" -w subdomains.txt
 
----
+# Parameter fuzzing with filtering
+./target/release/flood -u https://target.com/login -d "user=admin&pass=FUZZ" -w passwords.txt --filter-code 401
 
-## Features
-
-### Directory Enumeration
-
-FUZZ keyword placement in any URL position. Extensions, status code filtering, response size filtering.
-
-```bash
-flood -u https://target.com/FUZZ -w common.txt
-flood -u https://target.com/FUZZ -w common.txt -r -e php,bak --depth 3
-```
-
-### Virtual Host Discovery
-
-FUZZ in headers for subdomain enumeration. Filter by response size to remove defaults.
-
-```bash
-flood -u https://target.com -H "Host: FUZZ.target.com" -w subdomains.txt -fs 0
-```
-
-### Parameter Fuzzing
-
-FUZZ in POST data, query strings, or headers. Filter by status code to find valid credentials.
-
-```bash
-flood -u https://target.com/login -d "user=admin&pass=FUZZ" -w passwords.txt --filter-code 401
-```
-
-### Clusterbomb Mode
-
-Multiple wordlists with FUZZ/FUZ2Z keyword placement for combinatorial fuzzing.
-
-```bash
-flood -u https://target.com/FUZZ/FUZ2Z -w dirs.txt -w files.txt
-```
-
-### Advanced Filtering
-
-Match or filter by status code, response size, word count, line count, or regex in response body.
-
-```bash
-flood -u https://target.com/FUZZ -w list.txt --match-code 200,301
-flood -u https://target.com/FUZZ -w list.txt --match-regex "admin|dashboard"
-```
-
-### Proxy Integration
-
-Route traffic through Burp Suite or replay matched results to a proxy.
-
-```bash
-flood -u https://target.com/FUZZ -w list.txt -x http://127.0.0.1:8080
-flood -u https://target.com/FUZZ -w list.txt --replay-proxy http://127.0.0.1:8080
-```
-
-### Interactive Controls
-
-Pause, resume, adjust threads, and save state during scans. Resume interrupted scans from saved state.
-
-```bash
-flood -u https://target.com/FUZZ -w big-wordlist.txt
-# p: pause/resume | q: quit+save | +/-: threads | Ctrl+C: stop
-flood --resume flood-state-20260407-143022.json
+# Recursive scanning with extensions
+./target/release/flood -u https://target.com/FUZZ -w common.txt -r -e php,bak --depth 3
 ```
 
 ---
 
-## Architecture
+## §4 / Reference
+
+```bash
+# BASIC FUZZING
+flood -u https://target.com/FUZZ -w wordlist.txt    # Directory enumeration
+flood -u https://target.com/FUZZ/FUZ2Z -w dirs.txt -w files.txt  # Clusterbomb mode
+
+# VIRTUAL HOST DISCOVERY
+flood -u https://target.com -H "Host: FUZZ.target.com" -w subs.txt
+flood -H "X-Forwarded-Host: FUZZ.target.com" -u https://target.com -w vhosts.txt
+
+# PARAMETER FUZZING
+flood -u https://target.com/search?q=FUZZ -w params.txt        # GET parameters
+flood -u https://target.com/login -d "user=FUZZ&pass=admin" -w users.txt  # POST data
+flood -u https://target.com -H "Authorization: Bearer FUZZ" -w tokens.txt  # Headers
+
+# FILTERING & MATCHING
+--match-code 200,301,403        # Match specific status codes
+--filter-code 404,429           # Filter out status codes
+--match-size 1337-1400          # Match response size range
+--filter-size 0                 # Filter empty responses
+--match-words 10-50             # Match word count range
+--match-lines 5-20              # Match line count range
+--match-regex "admin|dashboard" # Match regex in response body
+--filter-regex "not found|404"  # Filter regex patterns
+
+# RECURSIVE SCANNING
+-r --depth 3                    # Recursive with max depth
+-e php,asp,jsp,txt,bak         # File extensions to append
+--discover-backup              # Auto-discover backup files (.bak, .old)
+
+# PROXY & OUTPUT
+-x http://127.0.0.1:8080       # Route through proxy
+--replay-proxy http://127.0.0.1:8080  # Send matches to proxy
+-o results.json                # JSON output
+-o results.csv                 # CSV format
+--format jsonl                 # JSON Lines format
+
+# PERFORMANCE & CONTROL
+-t 50                          # Thread count (default: 100)
+--delay 100                    # Delay between requests (ms)
+--timeout 10                   # Request timeout (seconds)
+--auto-throttle                # Enable 429 auto-throttling
+--save-state results.state     # Save state for resume
+--resume results.state         # Resume from saved state
+
+# INTERACTIVE CONTROLS (during scan)
+p          # Pause/resume scanning
++/-        # Increase/decrease threads
+q          # Quit and save state
+Ctrl+C     # Stop immediately
+```
+
+---
+
+## §5 / Architecture
+
+**Three-Layer Design**: CLI config parser → Async fuzzing engine → Filter pipeline
 
 ```
 src/
-├── main.rs          # CLI dispatch and config
-├── fuzzer/          # Core async fuzzing engine
-├── http/            # Request builder, response parser
-├── filter/          # Match/filter by code, size, regex
-├── output/          # JSON, JSONL, CSV, text formatters
-├── throttle/        # Auto-throttle and rate limiting
-├── recursive/       # Directory discovery and re-queue
-└── ui/              # Catppuccin Mocha terminal interface
+├── main.rs          # CLI dispatch and configuration parsing
+├── fuzzer/          # Core async fuzzing engine with tokio tasks
+├── http/            # HTTP request builder and response parser
+├── filter/          # Match/filter pipeline (code, size, regex)
+├── output/          # JSON, JSONL, CSV, text output formatters
+├── throttle/        # Auto-throttle monitoring and rate limiting
+├── recursive/       # Directory discovery and request re-queueing
+└── ui/              # Catppuccin Mocha terminal user interface
 ```
 
-Three-layer design: CLI parses flags into a FuzzConfig, the async engine fans out requests across tokio tasks, and the filter pipeline processes responses. Auto-throttle monitors 429s and adjusts concurrency transparently.
+**Async Architecture**: CLI parses flags into FuzzConfig, async engine fans out requests across 100 tokio tasks, filter pipeline processes responses with match/filter criteria, auto-throttle monitors 429 responses and adjusts concurrency transparently.
 
 ---
 
-## Platform Support
+## §6 / Authorization
 
-| | Linux | Windows | macOS |
-|---|---|---|---|
-| Directory Fuzzing | Full | Full | Full |
-| VHost Discovery | Full | Full | Full |
-| Recursive Scan | Full | Full | Full |
-| Proxy Integration | Full | Full | Full |
-| Interactive Controls | Full | Full | Full |
-| Cross-compile | musl | MSVC | Native |
+Flood is designed for **authorized web application security testing** with explicit written permission. Use only against targets you own or have proper authorization to test. The tool generates significant HTTP traffic and server logs.
+
+Security vulnerabilities should be reported via [GitHub Security Advisories](https://github.com/Real-Fruit-Snacks/Flood/security/advisories) with 90-day responsible disclosure.
+
+**Flood does not**: exploit discovered endpoints, inject payloads for SQLi/XSS testing, brute-force authentication without explicit FUZZ placement, or evade WAF/IDS detection systems.
 
 ---
 
-## Security
-
-Report vulnerabilities via [GitHub Security Advisories](https://github.com/Real-Fruit-Snacks/Flood/security/advisories). 90-day responsible disclosure.
-
-**Flood does not:**
-- Exploit discovered endpoints (not a vulnerability scanner)
-- Inject payloads or test for SQLi/XSS (not a web app scanner)
-- Brute-force authentication without explicit FUZZ placement
-- Evade WAF or IDS detection systems
-
----
-
-## License
-
-[MIT](LICENSE) — Copyright 2026 Real-Fruit-Snacks
+**Real-Fruit-Snacks** — [All projects](https://real-fruit-snacks.github.io/) · [Security](https://github.com/Real-Fruit-Snacks/Flood/security/advisories) · [License](LICENSE)
